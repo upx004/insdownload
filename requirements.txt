@@ -1,0 +1,6 @@
+Flask
+flask-cors
+instaloader
+requests
+beautifulsoup4
+gunicorn
