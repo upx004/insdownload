@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全能素材下载器 (Ins + Pinterest)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fafafa;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .highlight-ins {
+            color: #E1306C;
+        }
+
+        .highlight-pin {
+            color: #E60023;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background-color: #0095f6;
+        }
+
+        .btn-primary:hover {
+            background-color: #007bb5;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        #actionBar {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .media-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .media-card img,
+        .media-card video {
+            max-width: 200px;
+            max-height: 250px;
+            border-radius: 5px;
+            display: block;
+            margin-bottom: 10px;
+            object-fit: cover;
+        }
+
+        .media-checkbox {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .download-single {
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: auto;
+        }
+
+        #loading {
+            display: none;
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1><span class="highlight-ins">Ins</span> & <span class="highlight-pin">Pinterest</span> 下载器</h1>
+        <p>支持 Instagram (图片/Reels) 和 Pinterest (包含 pin.it 短链)</p>
+        <input type="text" id="targetUrl" placeholder="粘贴链接：https://pin.it/3ZbY41CGV 或 Instagram 链接">
+        <br>
+        <button class="btn-primary" onclick="parseUrl()">解析链接</button>
+        <p id="loading">正在努力解析中，请稍候...</p>
+
+        <div id="actionBar">
+            <button class="btn-warning" onclick="toggleSelectAll()">全选 / 取消全选</button>
+            <button class="btn-success" onclick="batchDownload()">⬇️ 一键下载选中内容</button>
+        </div>
+    </div>
+
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        async function parseUrl() {
+            const urlInput = document.getElementById('targetUrl').value;
+            const gallery = document.getElementById('gallery');
+            const loading = document.getElementById('loading');
+            const actionBar = document.getElementById('actionBar');
+
+            if (!urlInput) {
+                alert('请先输入链接！');
+                return;
+            }
+
+            gallery.innerHTML = '';
+            actionBar.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const baseUrl = window.location.hostname === 'localhost' ||
+                    window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+                    ? 'http://127.0.0.1:5000'
+                    : `http://${window.location.hostname}:5000`;
+
+                const response = await fetch(`${baseUrl}/api/parse`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (data.status === 'success') {
+                    actionBar.style.display = 'block';
+
+                    data.media.forEach((item, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'media-card';
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.className = 'media-checkbox';
+                        checkbox.value = item.url;
+                        checkbox.dataset.mediaType = item.type;
+
+                        let mediaElement;
+                        if (item.type === 'video') {
+                            mediaElement = document.createElement('video');
+                            mediaElement.src = item.url;
+                            mediaElement.controls = true;
+                        } else {
+                            mediaElement = document.createElement('img');
+                            mediaElement.src = item.url;
+                            mediaElement.style.cursor = 'pointer';
+                            mediaElement.onclick = () => { checkbox.checked = !checkbox.checked; };
+                        }
+
+                        const btn = document.createElement('button');
+                        btn.className = 'btn-success download-single';
+                        btn.innerText = item.type === 'video' ? '下载视频' : '下载图片';
+                        btn.onclick = () => downloadMedia(item.url, index, item.type);
+
+                        card.appendChild(checkbox);
+                        card.appendChild(mediaElement);
+                        card.appendChild(btn);
+                        gallery.appendChild(card);
+                    });
+                } else {
+                    alert('解析失败：' + data.message);
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                alert('请求后端服务出错，请检查后端是否运行。');
+                console.error(error);
+            }
+        }
+
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.media-checkbox');
+            let allChecked = true;
+            checkboxes.forEach(cb => { if (!cb.checked) allChecked = false; });
+            checkboxes.forEach(cb => { cb.checked = !allChecked; });
+        }
+
+        async function batchDownload() {
+            const selectedCheckboxes = document.querySelectorAll('.media-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                alert('请至少勾选一个内容！');
+                return;
+            }
+
+            alert(`已加入下载队列，即将下载 ${selectedCheckboxes.length} 个文件。`);
+
+            for (let i = 0; i < selectedCheckboxes.length; i++) {
+                const url = selectedCheckboxes[i].value;
+                const type = selectedCheckboxes[i].dataset.mediaType;
+                await downloadMedia(url, i, type);
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+        }
+
+        async function downloadMedia(mediaSrc, index = 0, type = 'image') {
+            try {
+                const baseUrl = window.location.hostname === 'localhost' ||
+                    window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+                    ? 'http://127.0.0.1:5000'
+                    : `http://${window.location.hostname}:5000`;
+
+                // 【核心改变】：我们不再直接 fetch 图片的原始链接，而是把链接发给咱们自己的后端代理
+                const response = await fetch(`${baseUrl}/api/download`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: mediaSrc })
+                });
+
+                if (!response.ok) throw new Error('后端下载代理请求失败');
+
+                // 接收后端传过来的纯净文件流
+                const mediaBlob = await response.blob();
+                const mediaURL = URL.createObjectURL(mediaBlob);
+
+                const link = document.createElement('a');
+                link.href = mediaURL;
+                const extension = type === 'video' ? '.mp4' : '.jpg';
+                const prefix = type === 'video' ? 'media_video_' : 'media_image_';
+                link.download = `${prefix}${new Date().getTime()}_${index}${extension}`;
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(mediaURL);
+            } catch (err) {
+                console.error('下载失败：', err);
+                alert('一键下载可能受限，您可以尝试右键点击图片/视频选择“另存为”。');
+            }
+        }
+    </script>
+
+</body>
+
+</html>
