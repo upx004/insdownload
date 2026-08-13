@@ -173,8 +173,8 @@
             loading.style.display = 'block';
 
             try {
-                // 指向你的真实后端地址
-                const baseUrl = 'https://my-ins-backend.onrender.com';
+                // 已为你填入准确的 Render 网址
+                const baseUrl = 'https://my-ins-backend-4zcw.onrender.com';
                 
                 const response = await fetch(`${baseUrl}/api/parse`, {
                     method: 'POST',
@@ -256,7 +256,37 @@
 
         async function downloadMedia(mediaSrc, index = 0, type = 'image') {
             try {
-                // 【终极方案】：彻底抛弃本地判断，直接使用真实的 Render 后端地址代购
-                const baseUrl = 'https://my-ins-backend.onrender.com';
+                // 已为你填入准确的 Render 网址
+                const baseUrl = 'https://my-ins-backend-4zcw.onrender.com';
 
-                const response
+                const response = await fetch(`${baseUrl}/api/download`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: mediaSrc })
+                });
+
+                if (!response.ok) throw new Error('后端下载代理请求失败');
+
+                const mediaBlob = await response.blob();
+                const mediaURL = URL.createObjectURL(mediaBlob);
+
+                const link = document.createElement('a');
+                link.href = mediaURL;
+                const extension = type === 'video' ? '.mp4' : '.jpg';
+                const prefix = type === 'video' ? 'ins_video_' : 'ins_image_';
+                link.download = `${prefix}${new Date().getTime()}_${index}${extension}`;
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(mediaURL);
+            } catch (err) {
+                console.error('下载失败：', err);
+                alert('一键下载可能受限，您可以尝试长按/右键图片或视频选择“保存”。');
+            }
+        }
+    </script>
+
+</body>
+
+</html>
