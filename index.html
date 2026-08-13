@@ -173,8 +173,8 @@
             loading.style.display = 'block';
 
             try {
-                // 已为你填入准确的 Render 网址
-                const baseUrl = 'https://my-ins-backend-4zcw.onrender.com';
+                // 填入准确的 Render 网址
+               const baseUrl = 'https://my-ins-backend.onrender.com';
                 
                 const response = await fetch(`${baseUrl}/api/parse`, {
                     method: 'POST',
@@ -256,8 +256,8 @@
 
         async function downloadMedia(mediaSrc, index = 0, type = 'image') {
             try {
-                // 已为你填入准确的 Render 网址
-                const baseUrl = 'https://my-ins-backend-4zcw.onrender.com';
+                // 已填入准确的 Render 网址
+               const baseUrl = 'https://my-ins-backend.onrender.com';
 
                 const response = await fetch(`${baseUrl}/api/download`, {
                     method: 'POST',
