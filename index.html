@@ -173,11 +173,13 @@
             loading.style.display = 'block';
 
             try {
-                const baseUrl = window.location.hostname === 'localhost' ||
-                    window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
-                    ? 'http://127.0.0.1:5000'
-                    : `http://${window.location.hostname}:5000`;
+                // const baseUrl = window.location.hostname === 'localhost' ||
+                //     window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+                //     ? 'http://127.0.0.1:5000'
+                //     : `http://${window.location.hostname}:5000`;
 
+                const baseUrl = 'https://my-ins-backend.onrender.com';
+                
                 const response = await fetch(`${baseUrl}/api/parse`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
