@@ -173,11 +173,7 @@
             loading.style.display = 'block';
 
             try {
-                // const baseUrl = window.location.hostname === 'localhost' ||
-                //     window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
-                //     ? 'http://127.0.0.1:5000'
-                //     : `http://${window.location.hostname}:5000`;
-
+                // 指向你的真实后端地址
                 const baseUrl = 'https://my-ins-backend.onrender.com';
                 
                 const response = await fetch(`${baseUrl}/api/parse`, {
@@ -260,41 +256,7 @@
 
         async function downloadMedia(mediaSrc, index = 0, type = 'image') {
             try {
-                const baseUrl = window.location.hostname === 'localhost' ||
-                    window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
-                    ? 'http://127.0.0.1:5000'
-                    : `http://${window.location.hostname}:5000`;
+                // 【终极方案】：彻底抛弃本地判断，直接使用真实的 Render 后端地址代购
+                const baseUrl = 'https://my-ins-backend.onrender.com';
 
-                // 【核心改变】：我们不再直接 fetch 图片的原始链接，而是把链接发给咱们自己的后端代理
-                const response = await fetch(`${baseUrl}/api/download`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: mediaSrc })
-                });
-
-                if (!response.ok) throw new Error('后端下载代理请求失败');
-
-                // 接收后端传过来的纯净文件流
-                const mediaBlob = await response.blob();
-                const mediaURL = URL.createObjectURL(mediaBlob);
-
-                const link = document.createElement('a');
-                link.href = mediaURL;
-                const extension = type === 'video' ? '.mp4' : '.jpg';
-                const prefix = type === 'video' ? 'media_video_' : 'media_image_';
-                link.download = `${prefix}${new Date().getTime()}_${index}${extension}`;
-
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(mediaURL);
-            } catch (err) {
-                console.error('下载失败：', err);
-                alert('一键下载可能受限，您可以尝试右键点击图片/视频选择“另存为”。');
-            }
-        }
-    </script>
-
-</body>
-
-</html>
+                const response
